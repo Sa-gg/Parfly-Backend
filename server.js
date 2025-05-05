@@ -3,6 +3,7 @@ import cors from 'cors';
 import clientRoute from './routes/clientRoute.js';
 import driverRoute from './routes/driverRoute.js'; 
 import deliveryRoute from './routes/deliveryRoute.js'; 
+import reportRoute from './routes/reportRoute.js';
 import env from 'dotenv';
 import axios from 'axios';
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api', clientRoute);
 app.use('/api', driverRoute);
 app.use('/api', deliveryRoute);
+app.use('/api', reportRoute)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
