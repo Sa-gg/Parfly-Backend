@@ -10,6 +10,7 @@ import axios from 'axios';
 env.config();
 const app = express();
 const PORT = process.env.PORT || 3000;  // Use dynamic port or default to 3000
+// const PORT = 3000;
 
 const tomtomKey = process.env.TOMTOM_API_KEY;
 
@@ -20,6 +21,7 @@ app.use('/api', clientRoute);
 app.use('/api', driverRoute);
 app.use('/api', deliveryRoute);
 app.use('/api', reportRoute)
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
