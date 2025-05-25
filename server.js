@@ -93,40 +93,66 @@ app.get("/api/reverse-geocode", async (req, res) => {
   }
 
   try {
-    const { data } = await axios.get(
+    // Step 1: Try nearby POI search
+    const poiRes = await axios.get(
       `https://api.tomtom.com/search/2/nearbySearch/.JSON`,
       {
         params: {
           key: process.env.TOMTOM_API_KEY,
           lat,
           lon,
-          radius: 50,
+          radius: 50, // 50 meters search radius
           limit: 1,
         },
       }
     );
 
-    const result = data.results?.[0];
+    let poiName = null;
+    let streetName = null;
+    let freeformAddress = null;
 
-    if (!result) {
-      return res.status(404).json({ error: "No result found" });
+    const poiResult = poiRes.data.results?.[0];
+
+    if (poiResult) {
+      poiName = poiResult.poi?.name || null;
+      streetName = poiResult.address?.streetName || null;
+      freeformAddress = poiResult.address?.freeformAddress || null;
     }
 
-    const poi = result.poi || {};
-    const address = result.address || {};
+    // Step 2: If no POI found, fallback to reverse geocode for freeform address
+    if (!poiResult) {
+      const reverseRes = await axios.get(
+        `https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.JSON`,
+        {
+          params: {
+            key: process.env.TOMTOM_API_KEY,
+          },
+        }
+      );
+
+      const reverseAddress = reverseRes.data.addresses?.[0]?.address;
+
+      if (reverseAddress) {
+        freeformAddress = reverseAddress.freeformAddress || null;
+        streetName = reverseAddress.streetName || null;
+      } else {
+        return res.status(404).json({ error: "No address found" });
+      }
+    }
 
     res.json({
       poi: {
-        name: poi.name || null,
+        name: poiName,
       },
       address: {
-        streetName: address.streetName || null,
-        freeformAddress: address.freeformAddress || null,
+        streetName,
+        freeformAddress,
       },
     });
   } catch (err) {
-    console.error("Nearby POI search error:", err.message || err);
-    res.status(500).json({ error: "Nearby POI search failed" });
+    console.error("Geocoding error:", err.message || err);
+    res.status(500).json({ error: "Geocoding failed" });
   }
 });
+
 
