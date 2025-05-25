@@ -94,18 +94,26 @@ app.get("/api/reverse-geocode", async (req, res) => {
 
   try {
     const { data } = await axios.get(
-      `https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.JSON`,
-      { params: { key: process.env.TOMTOM_API_KEY } }
+      `https://api.tomtom.com/search/2/nearbySearch/.JSON`,
+      {
+        params: {
+          key: process.env.TOMTOM_API_KEY,
+          lat,
+          lon,
+          radius: 50,
+          limit: 1,
+        },
+      }
     );
 
-    const result = data.addresses?.[0];
+    const result = data.results?.[0];
 
     if (!result) {
-      return res.status(404).json({ error: "No address found" });
+      return res.status(404).json({ error: "No result found" });
     }
 
-    const address = result.address || {};
     const poi = result.poi || {};
+    const address = result.address || {};
 
     res.json({
       poi: {
@@ -117,8 +125,8 @@ app.get("/api/reverse-geocode", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Reverse geocode error:", err.message || err);
-    res.status(500).json({ error: "Reverse geocode failed" });
+    console.error("Nearby POI search error:", err.message || err);
+    res.status(500).json({ error: "Nearby POI search failed" });
   }
 });
 
