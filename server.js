@@ -87,27 +87,38 @@ app.get("/api/search-location", async (req, res) => {
 
 app.get("/api/reverse-geocode", async (req, res) => {
   const { lat, lon } = req.query;
+
   if (!lat || !lon) {
     return res.status(400).json({ error: "Missing lat or lon" });
   }
+
   try {
-    // Using TomTom Reverse Geocode API
     const { data } = await axios.get(
       `https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.JSON`,
       { params: { key: process.env.TOMTOM_API_KEY } }
     );
-    // TomTom nests freeformAddress at data.addresses[0].address.freeformAddress
-    const address =
-      data.addresses &&
-      data.addresses[0] &&
-      data.addresses[0].address.freeformAddress;
-    if (address) {
-      res.json({ freeformAddress: address });
-    } else {
-      res.status(404).json({ error: "No address found" });
+
+    const result = data.addresses?.[0];
+
+    if (!result) {
+      return res.status(404).json({ error: "No address found" });
     }
+
+    const address = result.address || {};
+    const poi = result.poi || {};
+
+    res.json({
+      poi: {
+        name: poi.name || null,
+      },
+      address: {
+        streetName: address.streetName || null,
+        freeformAddress: address.freeformAddress || null,
+      },
+    });
   } catch (err) {
-    console.error("Reverse geocode error:", err);
+    console.error("Reverse geocode error:", err.message || err);
     res.status(500).json({ error: "Reverse geocode failed" });
   }
 });
+
