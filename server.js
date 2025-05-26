@@ -168,7 +168,6 @@ app.get("/api/reverse-geocode", async (req, res) => {
 });
 
 
-
 app.get("/api/route-distance", async (req, res) => {
   const { pickup_lat, pickup_lon, dropoff_lat, dropoff_lon } = req.query;
 
@@ -183,6 +182,8 @@ app.get("/api/route-distance", async (req, res) => {
       params: {
         key: tomtomKey,
         travelMode: "motorcycle",
+        routeType: "fastest",      // Ensures route is optimized based on real-time traffic
+        traffic: true,             // Enable traffic-aware routing
       },
     });
 
@@ -191,17 +192,20 @@ app.get("/api/route-distance", async (req, res) => {
       return res.status(404).json({ error: "No route found." });
     }
 
-    const { lengthInMeters, travelTimeInSeconds } = route.summary;
+    const { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds } = route.summary;
 
     res.json({
       distanceInMeters: lengthInMeters,
       distanceInKm: (lengthInMeters / 1000).toFixed(2),
       durationInSeconds: travelTimeInSeconds,
       durationInMinutes: Math.ceil(travelTimeInSeconds / 60),
+      trafficDelayInSeconds,  // Additional time caused by traffic
+      trafficDelayInMinutes: Math.ceil(trafficDelayInSeconds / 60),
     });
   } catch (error) {
     console.error("Route calculation error:", error.message || error);
     res.status(500).json({ error: "Failed to calculate route distance." });
   }
 });
+
 
