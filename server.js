@@ -168,3 +168,40 @@ app.get("/api/reverse-geocode", async (req, res) => {
 });
 
 
+
+app.get("/api/route-distance", async (req, res) => {
+  const { pickup_lat, pickup_lon, dropoff_lat, dropoff_lon } = req.query;
+
+  if (!pickup_lat || !pickup_lon || !dropoff_lat || !dropoff_lon) {
+    return res.status(400).json({ error: "All coordinates are required." });
+  }
+
+  try {
+    const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${pickup_lat},${pickup_lon}:${dropoff_lat},${dropoff_lon}/json`;
+
+    const { data } = await axios.get(routeUrl, {
+      params: {
+        key: tomtomKey,
+        travelMode: "car",
+      },
+    });
+
+    const route = data.routes?.[0];
+    if (!route) {
+      return res.status(404).json({ error: "No route found." });
+    }
+
+    const { lengthInMeters, travelTimeInSeconds } = route.summary;
+
+    res.json({
+      distanceInMeters: lengthInMeters,
+      distanceInKm: (lengthInMeters / 1000).toFixed(2),
+      durationInSeconds: travelTimeInSeconds,
+      durationInMinutes: Math.ceil(travelTimeInSeconds / 60),
+    });
+  } catch (error) {
+    console.error("Route calculation error:", error.message || error);
+    res.status(500).json({ error: "Failed to calculate route distance." });
+  }
+});
+
