@@ -182,7 +182,7 @@ app.get("/api/route-distance", async (req, res) => {
     const { data } = await axios.get(routeUrl, {
       params: {
         key: tomtomKey,
-        travelMode: "car",
+        travelMode: "motorcycle",
       },
     });
 
