@@ -26,6 +26,18 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+
+
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", message: "Server is running" });
+});
+
+app.get("/", (req, res) => {
+  res.json({ status: "OK", message: "Welcome to Parlfy Backend" });
+});
+
+
+
 // http://localhost:3000/api/search-location?q=inday&lat=10.6765&lon=122.9509
 // http://localhost:3000/api/search-location?q=inday
 
