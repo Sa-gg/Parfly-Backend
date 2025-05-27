@@ -4,9 +4,10 @@ import bcrypt from 'bcrypt';
 const validRoles = ['admin', 'customer', 'driver'];
 
 export const registerUser = async (userData) => {
-  const { full_name, email, password, phone, role = 'customer' } = userData;
+  const { full_name = '', email, password, phone, role = 'customer' } = userData;
 
-  if (!full_name || !email || !password || !phone) {
+  // Required fields (excluding full_name now)
+  if (!email || !password || !phone) {
     throw new Error('Missing required fields');
   }
 
