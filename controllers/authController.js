@@ -13,9 +13,9 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await authService.loginUser(email, password);
-    res.status(200).json(user); // just user data, no JWT token
+    const { identifier, password } = req.body; // identifier = email or phone
+    const user = await authService.loginUser(identifier, password);
+    res.status(200).json(user); // no JWT token
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
