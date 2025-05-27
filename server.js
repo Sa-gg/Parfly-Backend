@@ -26,8 +26,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-
-
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
 });
@@ -35,8 +33,6 @@ app.get("/health", (req, res) => {
 app.get("/", (req, res) => {
   res.json({ status: "OK", message: "Welcome to Parlfy Backend" });
 });
-
-
 
 // http://localhost:3000/api/search-location?q=inday&lat=10.6765&lon=122.9509
 // http://localhost:3000/api/search-location?q=inday
@@ -167,7 +163,6 @@ app.get("/api/reverse-geocode", async (req, res) => {
   }
 });
 
-
 app.get("/api/route-distance", async (req, res) => {
   const { pickup_lat, pickup_lon, dropoff_lat, dropoff_lon } = req.query;
 
@@ -182,8 +177,9 @@ app.get("/api/route-distance", async (req, res) => {
       params: {
         key: tomtomKey,
         travelMode: "motorcycle",
-        routeType: "fastest",      // Ensures route is optimized based on real-time traffic
-        traffic: true,             // Enable traffic-aware routing
+        routeType: "fastest",
+        traffic: true,
+        vehicleMaxSpeed: 60, // optional: specify motorcycle speed
       },
     });
 
@@ -192,14 +188,15 @@ app.get("/api/route-distance", async (req, res) => {
       return res.status(404).json({ error: "No route found." });
     }
 
-    const { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds } = route.summary;
+    const { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds } =
+      route.summary;
 
     res.json({
       distanceInMeters: lengthInMeters,
       distanceInKm: (lengthInMeters / 1000).toFixed(2),
       durationInSeconds: travelTimeInSeconds,
       durationInMinutes: Math.ceil(travelTimeInSeconds / 60),
-      trafficDelayInSeconds,  // Additional time caused by traffic
+      trafficDelayInSeconds, // Additional time caused by traffic
       trafficDelayInMinutes: Math.ceil(trafficDelayInSeconds / 60),
     });
   } catch (error) {
@@ -207,5 +204,3 @@ app.get("/api/route-distance", async (req, res) => {
     res.status(500).json({ error: "Failed to calculate route distance." });
   }
 });
-
-
