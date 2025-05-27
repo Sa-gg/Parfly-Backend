@@ -1,5 +1,7 @@
 import * as authService from "../services/authServices.js";
 
+import { generateToken } from "../services/auth.js";
+
 export const registerUser = async (req, res) => {
   try {
     const userData = req.body;
@@ -11,11 +13,15 @@ export const registerUser = async (req, res) => {
   }
 };
 
+
 export const loginUser = async (req, res) => {
   try {
-    const { identifier, password } = req.body; // identifier = email or phone
+    const { identifier, password } = req.body;
     const user = await authService.loginUser(identifier, password);
-    res.status(200).json(user); // no JWT token
+
+    const token = generateToken(user);
+
+    res.status(200).json({ user, token });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }

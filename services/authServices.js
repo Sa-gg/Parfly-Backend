@@ -1,6 +1,7 @@
 import { query } from "../db.js";
 import bcrypt from "bcrypt";
 
+
 const validRoles = ["admin", "customer", "driver"];
 
 export const registerUser = async (userData) => {
@@ -57,7 +58,9 @@ export const loginUser = async (identifier, password) => {
   }
 
   // Try email first
-  let result = await query("SELECT * FROM users WHERE email = $1", [identifier]);
+  let result = await query("SELECT * FROM users WHERE email = $1", [
+    identifier,
+  ]);
 
   // If not found by email, try normalized phone
   if (result.rows.length === 0) {
@@ -76,7 +79,9 @@ export const loginUser = async (identifier, password) => {
       normalizedPhone = "0" + identifier;
     }
 
-    result = await query("SELECT * FROM users WHERE phone = $1", [normalizedPhone]);
+    result = await query("SELECT * FROM users WHERE phone = $1", [
+      normalizedPhone,
+    ]);
 
     if (result.rows.length === 0) {
       throw new Error("Invalid email/phone or password");
