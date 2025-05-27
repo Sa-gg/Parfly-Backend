@@ -40,3 +40,29 @@ export const registerUser = async (userData) => {
 
   return rows[0];
 };
+
+
+export const loginUser = async (email, password) => {
+  if (!email || !password) {
+    throw new Error('Email and password are required');
+  }
+
+  // Find user by email
+  const { rows } = await query('SELECT * FROM users WHERE email = $1', [email]);
+  if (rows.length === 0) {
+    throw new Error('Invalid email or password');
+  }
+
+  const user = rows[0];
+
+  // Check password
+  const validPassword = await bcrypt.compare(password, user.password_hash);
+  if (!validPassword) {
+    throw new Error('Invalid email or password');
+  }
+
+  // Remove password_hash before returning user info
+  delete user.password_hash;
+
+  return user;
+};
