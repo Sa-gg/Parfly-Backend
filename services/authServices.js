@@ -1,0 +1,41 @@
+import { query } from '../db.js';
+import bcrypt from 'bcrypt';
+
+const validRoles = ['admin', 'customer', 'driver'];
+
+export const registerUser = async (userData) => {
+  const { full_name, email, password, phone, role = 'customer' } = userData;
+
+  if (!full_name || !email || !password || !phone) {
+    throw new Error('Missing required fields');
+  }
+
+  if (!validRoles.includes(role)) {
+    throw new Error('Invalid role');
+  }
+
+  // Check if email already exists
+  const emailExists = await query('SELECT 1 FROM users WHERE email = $1', [email]);
+  if (emailExists.rows.length > 0) {
+    throw new Error('Email already registered');
+  }
+
+  // Check if phone already exists
+  const phoneExists = await query('SELECT 1 FROM users WHERE phone = $1', [phone]);
+  if (phoneExists.rows.length > 0) {
+    throw new Error('Phone number already registered');
+  }
+
+  // Hash password
+  const saltRounds = 10;
+  const password_hash = await bcrypt.hash(password, saltRounds);
+
+  const { rows } = await query(
+    `INSERT INTO users (full_name, email, password_hash, phone, role) 
+     VALUES ($1, $2, $3, $4, $5) 
+     RETURNING user_id, full_name, email, phone, role, created_at`,
+    [full_name, email, password_hash, phone, role]
+  );
+
+  return rows[0];
+};
