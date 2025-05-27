@@ -1,5 +1,4 @@
 import * as authService from "../services/authServices.js";
-
 import { generateToken } from "../services/auth.js";
 
 export const registerUser = async (req, res) => {
@@ -12,7 +11,6 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 export const loginUser = async (req, res) => {
   try {
