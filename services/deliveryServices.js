@@ -28,6 +28,12 @@ export const createDelivery = async (deliveryData) => {
     parcel_amount,
     accepted_at,
     received_at,
+
+    // New commission-related fields
+    delivery_fee = 0,
+    commission_amount = 0,
+    driver_earnings = 0,
+    commission_deducted = false,
   } = deliveryData;
 
   // Fetch sender, receiver, driver details first
@@ -54,14 +60,16 @@ export const createDelivery = async (deliveryData) => {
         created_at, payer, add_info,
         pickup_lat, pickup_long, dropoff_lat, dropoff_long,
         parcel_amount, accepted_at, received_at,
-        sender_name, receiver_name, driver_name, vehicle, vehicle_plate
+        sender_name, receiver_name, driver_name, vehicle, vehicle_plate,
+        delivery_fee, commission_amount, driver_earnings, commission_deducted
       ) VALUES (
         $1, $2, $3,
         $4, $5, $6,
         NOW(), $7, $8,
         $9, $10, $11, $12,
         $13, $14, $15,
-        $16, $17, $18, $19, $20
+        $16, $17, $18, $19, $20,
+        $21, $22, $23, $24
       )
       RETURNING *;
     `,
@@ -86,6 +94,10 @@ export const createDelivery = async (deliveryData) => {
       driver_name,
       vehicle,
       vehicle_plate,
+      delivery_fee,
+      commission_amount,
+      driver_earnings,
+      commission_deducted,
     ]
   );
 
