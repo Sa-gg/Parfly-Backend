@@ -10,7 +10,6 @@ export const getDeliveries = async () => {
   return rows;
 };
 
-// CREATE Delivery
 export const createDelivery = async (deliveryData) => {
   const {
     sender_id,
@@ -28,29 +27,36 @@ export const createDelivery = async (deliveryData) => {
     parcel_amount,
     accepted_at,
     received_at,
-
-    // New commission-related fields
     delivery_fee = 0,
-    commission_amount = 0,
-    driver_earnings = 0,
     commission_deducted = false,
   } = deliveryData;
 
   // Fetch sender, receiver, driver details first
-  const senderResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [sender_id]);
-  const receiverResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [receiver_id]);
-  const driverResult = await query(`
+  const senderResult = await query(
+    `SELECT full_name FROM users WHERE user_id = $1`,
+    [sender_id]
+  );
+  const receiverResult = await query(
+    `SELECT full_name FROM users WHERE user_id = $1`,
+    [receiver_id]
+  );
+  const driverResult = await query(
+    `
     SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
     FROM drivers d
     JOIN users u ON d.user_id = u.user_id
     WHERE d.driver_id = $1
-  `, [driver_id]);
+  `,
+    [driver_id]
+  );
 
   const sender_name = senderResult.rows[0]?.full_name || null;
   const receiver_name = receiverResult.rows[0]?.full_name || null;
   const driver_name = driverResult.rows[0]?.driver_name || null;
   const vehicle = driverResult.rows[0]?.vehicle_type || null;
   const vehicle_plate = driverResult.rows[0]?.vehicle_plate || null;
+
+  const commissionRate = 0.2; // 20%
 
   const { rows } = await query(
     `
@@ -69,7 +75,10 @@ export const createDelivery = async (deliveryData) => {
         $9, $10, $11, $12,
         $13, $14, $15,
         $16, $17, $18, $19, $20,
-        $21, $22, $23, $24
+        $21, 
+        ROUND($21 * $22)::integer, 
+        ROUND($21 - ($21 * $22))::integer,
+        $23
       )
       RETURNING *;
     `,
@@ -95,8 +104,7 @@ export const createDelivery = async (deliveryData) => {
       vehicle,
       vehicle_plate,
       delivery_fee,
-      commission_amount,
-      driver_earnings,
+      commissionRate,
       commission_deducted,
     ]
   );
@@ -131,20 +139,29 @@ export const updateDelivery = async (deliveryData, deliveryId) => {
 
   // Fetch updated sender/receiver/driver details ONLY if ID is provided
   if (sender_id) {
-    const senderResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [sender_id]);
+    const senderResult = await query(
+      `SELECT full_name FROM users WHERE user_id = $1`,
+      [sender_id]
+    );
     sender_name = senderResult.rows[0]?.full_name || null;
   }
   if (receiver_id) {
-    const receiverResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [receiver_id]);
+    const receiverResult = await query(
+      `SELECT full_name FROM users WHERE user_id = $1`,
+      [receiver_id]
+    );
     receiver_name = receiverResult.rows[0]?.full_name || null;
   }
   if (driver_id) {
-    const driverResult = await query(`
+    const driverResult = await query(
+      `
       SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
       FROM drivers d
       JOIN users u ON d.user_id = u.user_id
       WHERE d.driver_id = $1
-    `, [driver_id]);
+    `,
+      [driver_id]
+    );
     driver_name = driverResult.rows[0]?.driver_name || null;
     vehicle = driverResult.rows[0]?.vehicle_type || null;
     vehicle_plate = driverResult.rows[0]?.vehicle_plate || null;
@@ -215,7 +232,7 @@ export const deleteDelivery = async (deliveryId) => {
     [deliveryId]
   );
 
-  return rowCount > 0; 
+  return rowCount > 0;
 };
 
 // SEARCH Deliveries (no joins needed anymore)
