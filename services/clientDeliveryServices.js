@@ -91,3 +91,17 @@ export const getClientDeliveries = async (userId) => {
   );
   return rows;
 };
+
+export const getClientDeliveryById = async (deliveryId, senderId) => {
+  const { rows } = await query(
+    `
+    SELECT *
+    FROM deliveries
+    WHERE delivery_id = $1 AND sender_id = $2;
+    `,
+    [deliveryId, senderId]
+  );
+
+  return rows[0]; // return a single delivery
+};
+

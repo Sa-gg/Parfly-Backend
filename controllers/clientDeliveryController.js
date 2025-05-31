@@ -21,3 +21,22 @@ export const getClientDeliveries = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch deliveries", error: error.message });
   }
 };
+
+
+export const getClientDeliveryById = async (req, res) => {
+  try {
+    const { deliveryId, userId } = req.params;
+
+    const delivery = await deliveryService.getClientDeliveryById(deliveryId, userId);
+
+    if (!delivery) {
+      return res.status(404).json({ message: "Delivery not found or access denied." });
+    }
+
+    res.status(200).json(delivery);
+  } catch (error) {
+    console.error("Error fetching delivery by ID:", error);
+    res.status(500).json({ message: "Failed to fetch delivery", error: error.message });
+  }
+};
+
