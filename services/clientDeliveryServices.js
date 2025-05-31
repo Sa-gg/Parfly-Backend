@@ -77,3 +77,17 @@ export const createClientDelivery = async (deliveryData) => {
 
   return rows[0];
 };
+
+
+export const getClientDeliveries = async (userId) => {
+  const { rows } = await query(
+    `
+    SELECT *
+    FROM deliveries
+    WHERE sender_id = $1
+    ORDER BY created_at DESC;
+    `,
+    [userId]
+  );
+  return rows;
+};

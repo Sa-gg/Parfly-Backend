@@ -4,5 +4,6 @@ import * as clientDeliveryController from '../controllers/clientDeliveryControll
 const router = express.Router();
 
 router.post('/client/deliveries', clientDeliveryController.createClientDelivery);
+router.get('/client/deliveries/:userId', clientDeliveryController.getClientDeliveries);
 
 export default router;
