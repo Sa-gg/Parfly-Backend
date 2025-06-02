@@ -14,6 +14,6 @@ router.post('/login/driver', authController.loginDriver);
 
 // Customer-specific
 router.post('/register/customer', authController.registerCustomer);
-router.post('/login/customer', authController.loginCustomer);
+router.post('/login/customer', authController.loginCustomer);   
 
 export default router;
