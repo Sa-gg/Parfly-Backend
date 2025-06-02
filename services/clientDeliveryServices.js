@@ -24,6 +24,10 @@ export const createClientDelivery = async (deliveryData) => {
     tip = 0,
     distance_km = 0,
     duration_minutes = 0,
+
+    // NEW: City fields
+    pickup_city = null,
+    dropoff_city = null,
   } = deliveryData;
 
   const senderResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [sender_id]);
@@ -38,6 +42,7 @@ export const createClientDelivery = async (deliveryData) => {
       delivery_fee, commission_amount, driver_earnings, commission_deducted,
       additional_compensation, tip,
       distance_km, duration_minutes,
+      pickup_city, dropoff_city,
       status, created_at
     ) VALUES (
       $1, $2, $3, $4,
@@ -46,6 +51,7 @@ export const createClientDelivery = async (deliveryData) => {
       $14, $15, $16, $17,
       $18, $19,
       $20, $21,
+      $22, $23,
       'pending', NOW()
     )
     RETURNING *;
@@ -72,6 +78,8 @@ export const createClientDelivery = async (deliveryData) => {
       tip,
       distance_km,
       duration_minutes,
+      pickup_city,
+      dropoff_city,
     ]
   );
 
