@@ -118,25 +118,23 @@ app.get("/api/reverse-geocode", async (req, res) => {
           key: process.env.TOMTOM_API_KEY,
           lat,
           lon,
-          radius: 50, // 50 meters search radius
+          radius: 50,
           limit: 1,
         },
       }
     );
 
     let poiName = null;
-    let streetName = null;
-    let freeformAddress = null;
+    let address = null;
 
     const poiResult = poiRes.data.results?.[0];
 
     if (poiResult) {
       poiName = poiResult.poi?.name || null;
-      streetName = poiResult.address?.streetName || null;
-      freeformAddress = poiResult.address?.freeformAddress || null;
+      address = poiResult.address || null; // include full address object
     }
 
-    // Step 2: If no POI found, fallback to reverse geocode for freeform address
+    // Step 2: If no POI found, fallback to reverse geocode
     if (!poiResult) {
       const reverseRes = await axios.get(
         `https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.JSON`,
@@ -148,10 +146,8 @@ app.get("/api/reverse-geocode", async (req, res) => {
       );
 
       const reverseAddress = reverseRes.data.addresses?.[0]?.address;
-
       if (reverseAddress) {
-        freeformAddress = reverseAddress.freeformAddress || null;
-        streetName = reverseAddress.streetName || null;
+        address = reverseAddress;
       } else {
         return res.status(404).json({ error: "No address found" });
       }
@@ -161,16 +157,14 @@ app.get("/api/reverse-geocode", async (req, res) => {
       poi: {
         name: poiName,
       },
-      address: {
-        streetName,
-        freeformAddress,
-      },
+      address, // full address object here
     });
   } catch (err) {
     console.error("Geocoding error:", err.message || err);
     res.status(500).json({ error: "Geocoding failed" });
   }
 });
+
 
 app.get("/api/route-distance", async (req, res) => {
   const { pickup_lat, pickup_lon, dropoff_lat, dropoff_lon } = req.query;
