@@ -30,7 +30,10 @@ export const createClientDelivery = async (deliveryData) => {
     dropoff_city = null,
   } = deliveryData;
 
-  const senderResult = await query(`SELECT full_name FROM users WHERE user_id = $1`, [sender_id]);
+  const senderResult = await query(
+    `SELECT full_name FROM users WHERE user_id = $1`,
+    [sender_id]
+  );
   const sender_name = senderResult.rows[0]?.full_name || null;
 
   const { rows } = await query(
@@ -86,7 +89,6 @@ export const createClientDelivery = async (deliveryData) => {
   return rows[0];
 };
 
-
 export const getClientDeliveries = async (userId) => {
   const { rows } = await query(
     `
@@ -111,6 +113,32 @@ export const getClientDeliveryById = async (deliveryId, senderId) => {
   );
 
   return rows[0]; // return a single delivery
+};
+
+export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
+  let queryText;
+  let queryParams;
+
+  if (deliveryId) {
+    queryText = `
+      SELECT *
+      FROM deliveries
+      WHERE driver_id = $1 AND delivery_id = $2
+      LIMIT 1;
+    `;
+    queryParams = [driverId, deliveryId];
+  } else {
+    queryText = `
+      SELECT *
+      FROM deliveries
+      WHERE driver_id = $1 AND status = 'accepted'
+      ORDER BY accepted_at DESC;
+    `;
+    queryParams = [driverId];
+  }
+
+  const { rows } = await query(queryText, queryParams);
+  return deliveryId ? rows[0] : rows;
 };
 
 export const updateClientDelivery = async (deliveryId, updateData) => {
@@ -150,13 +178,26 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   const current = existing.rows[0];
 
   // 2. Prevent if already accepted by another driver
-  if (current.status === 'accepted') {
+  if (current.status === "accepted") {
     if (current.driver_id && current.driver_id !== driver_id) {
       throw new Error("Delivery already accepted by another driver.");
     }
 
-    if (current.driver_id === driver_id && status === 'accepted') {
+    if (current.driver_id === driver_id && status === "accepted") {
       throw new Error("You have already accepted this delivery.");
+    }
+  }
+
+  // 2.1 Prevent if driver has other active deliveries
+  if (status === "accepted" && driver_id) {
+    const activeCheck = await query(
+      `SELECT delivery_id FROM deliveries
+     WHERE driver_id = $1 AND status IN ('accepted', 'in_transit') AND delivery_id != $2`,
+      [driver_id, deliveryId]
+    );
+
+    if (activeCheck.rows.length > 0) {
+      throw new Error("You already have an active delivery.");
     }
   }
 
@@ -166,12 +207,15 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   let vehicle_plate = null;
 
   if (driver_id !== undefined) {
-    const driverResult = await query(`
+    const driverResult = await query(
+      `
       SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
       FROM drivers d
       JOIN users u ON d.user_id = u.user_id
       WHERE d.driver_id = $1
-    `, [driver_id]);
+    `,
+      [driver_id]
+    );
 
     driver_name = driverResult.rows[0]?.driver_name || null;
     vehicle = driverResult.rows[0]?.vehicle_type || null;
@@ -194,20 +238,27 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   if (vehicle_plate !== null) addField("vehicle_plate", vehicle_plate);
   if (status !== undefined) addField("status", status);
   if (delivery_fee !== undefined) addField("delivery_fee", delivery_fee);
-  if (commission_amount !== undefined) addField("commission_amount", commission_amount);
-  if (driver_earnings !== undefined) addField("driver_earnings", driver_earnings);
-  if (commission_deducted !== undefined) addField("commission_deducted", commission_deducted);
-  if (additional_compensation !== undefined) addField("additional_compensation", additional_compensation);
+  if (commission_amount !== undefined)
+    addField("commission_amount", commission_amount);
+  if (driver_earnings !== undefined)
+    addField("driver_earnings", driver_earnings);
+  if (commission_deducted !== undefined)
+    addField("commission_deducted", commission_deducted);
+  if (additional_compensation !== undefined)
+    addField("additional_compensation", additional_compensation);
   if (tip !== undefined) addField("tip", tip);
   if (parcel_amount !== undefined) addField("parcel_amount", parcel_amount);
   if (receiver_name !== undefined) addField("receiver_name", receiver_name);
-  if (receiver_contact !== undefined) addField("receiver_contact", receiver_contact);
-  if (dropoff_address !== undefined) addField("dropoff_address", dropoff_address);
+  if (receiver_contact !== undefined)
+    addField("receiver_contact", receiver_contact);
+  if (dropoff_address !== undefined)
+    addField("dropoff_address", dropoff_address);
   if (dropoff_lat !== undefined) addField("dropoff_lat", dropoff_lat);
   if (dropoff_long !== undefined) addField("dropoff_long", dropoff_long);
   if (dropoff_city !== undefined) addField("dropoff_city", dropoff_city);
   if (distance_km !== undefined) addField("distance_km", distance_km);
-  if (duration_minutes !== undefined) addField("duration_minutes", duration_minutes);
+  if (duration_minutes !== undefined)
+    addField("duration_minutes", duration_minutes);
   if (add_info !== undefined) addField("add_info", add_info);
   if (accepted_at !== undefined) addField("accepted_at", accepted_at);
   if (received_at !== undefined) addField("received_at", received_at);

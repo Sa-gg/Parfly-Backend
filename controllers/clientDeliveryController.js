@@ -40,6 +40,24 @@ export const getClientDeliveryById = async (req, res) => {
   }
 };
 
+export const getDriverDeliveryById = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { deliveryId } = req.query;
+
+    const result = await deliveryService.getDriverDeliveryById(driverId, deliveryId);
+
+    if (!result || (Array.isArray(result) && result.length === 0)) {
+      return res.status(404).json({ message: "No delivery found." });
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching driver delivery:", error);
+    res.status(500).json({ message: "Failed to fetch driver delivery", error: error.message });
+  }
+};
+
 
 export const updateClientDelivery = async (req, res) => {
   try {
