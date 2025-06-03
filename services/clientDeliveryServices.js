@@ -121,18 +121,28 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
 
   if (deliveryId) {
     queryText = `
-      SELECT *
-      FROM deliveries
-      WHERE driver_id = $1 AND delivery_id = $2
+      SELECT 
+        d.*, 
+        u.full_name AS sender_name,
+        u.phone AS sender_phone,
+        u.email AS sender_email
+      FROM deliveries d
+      JOIN users u ON d.sender_id = u.user_id
+      WHERE d.driver_id = $1 AND d.delivery_id = $2
       LIMIT 1;
     `;
     queryParams = [driverId, deliveryId];
   } else {
     queryText = `
-      SELECT *
-      FROM deliveries
-      WHERE driver_id = $1 AND status = 'accepted'
-      ORDER BY accepted_at DESC;
+      SELECT 
+        d.*, 
+        u.full_name AS sender_name,
+        u.phone AS sender_phone,
+        u.email AS sender_email
+      FROM deliveries d
+      JOIN users u ON d.sender_id = u.user_id
+      WHERE d.driver_id = $1 AND d.status = 'accepted'
+      ORDER BY d.accepted_at DESC;
     `;
     queryParams = [driverId];
   }
@@ -140,6 +150,7 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
   const { rows } = await query(queryText, queryParams);
   return deliveryId ? rows[0] : rows;
 };
+
 
 export const updateClientDelivery = async (deliveryId, updateData) => {
   const {
