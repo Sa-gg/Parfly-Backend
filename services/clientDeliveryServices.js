@@ -137,6 +137,48 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
     received_at,
   } = updateData;
 
+  // 1. Fetch current delivery info
+  const existing = await query(
+    `SELECT status, driver_id FROM deliveries WHERE delivery_id = $1`,
+    [deliveryId]
+  );
+
+  if (existing.rows.length === 0) {
+    throw new Error("Delivery not found.");
+  }
+
+  const current = existing.rows[0];
+
+  // 2. Prevent if already accepted by another driver
+  if (current.status === 'accepted') {
+    if (current.driver_id && current.driver_id !== driver_id) {
+      throw new Error("Delivery already accepted by another driver.");
+    }
+
+    if (current.driver_id === driver_id && status === 'accepted') {
+      throw new Error("You have already accepted this delivery.");
+    }
+  }
+
+  // 3. If driver_id is provided, fetch driver info
+  let driver_name = null;
+  let vehicle = null;
+  let vehicle_plate = null;
+
+  if (driver_id !== undefined) {
+    const driverResult = await query(`
+      SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
+      FROM drivers d
+      JOIN users u ON d.user_id = u.user_id
+      WHERE d.driver_id = $1
+    `, [driver_id]);
+
+    driver_name = driverResult.rows[0]?.driver_name || null;
+    vehicle = driverResult.rows[0]?.vehicle_type || null;
+    vehicle_plate = driverResult.rows[0]?.vehicle_plate || null;
+  }
+
+  // 4. Prepare update fields
   const fields = [];
   const values = [];
   let paramIndex = 1;
@@ -147,6 +189,9 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   };
 
   if (driver_id !== undefined) addField("driver_id", driver_id);
+  if (driver_name !== null) addField("driver_name", driver_name);
+  if (vehicle !== null) addField("vehicle", vehicle);
+  if (vehicle_plate !== null) addField("vehicle_plate", vehicle_plate);
   if (status !== undefined) addField("status", status);
   if (delivery_fee !== undefined) addField("delivery_fee", delivery_fee);
   if (commission_amount !== undefined) addField("commission_amount", commission_amount);
@@ -183,4 +228,3 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   const { rows } = await query(queryText, values);
   return rows[0];
 };
-
