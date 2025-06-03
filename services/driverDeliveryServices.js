@@ -16,8 +16,8 @@ export const getDeliveriesByDistance = async (lat, lon) => {
 
   const deliveries = result.rows;
 
-  const nearest = [];   // 0 - 5 km
-  const suburbs = [];   // 5 - 15 km
+  const nearest = []; // 0 - 5 km
+  const suburbs = []; // 5 - 15 km
   const intercity = []; // 15+ km
 
   for (const delivery of deliveries) {
@@ -37,12 +37,14 @@ export const getDeliveriesByDistance = async (lat, lon) => {
       });
 
       const meters = data.routes?.[0]?.summary?.lengthInMeters;
-      if (!meters) {
-        console.warn(`Missing route distance for delivery ${delivery_id}`);
-        continue;
-      }
+      let distanceKm;
 
-      const distanceKm = +(meters / 1000).toFixed(2);
+      if (meters === undefined || meters === null || meters === 0) {
+        console.warn(`Delivery ${delivery_id} - No route or zero distance`);
+        distanceKm = 0.01;
+      } else {
+        distanceKm = +(meters / 1000).toFixed(2);
+      }
       const enriched = { ...delivery, distanceKm };
 
       if (distanceKm <= 5) {
@@ -52,9 +54,11 @@ export const getDeliveriesByDistance = async (lat, lon) => {
       } else {
         intercity.push(enriched);
       }
-
     } catch (err) {
-      console.warn(`TomTom route failed for delivery ${delivery_id}:`, err.message);
+      console.warn(
+        `TomTom route failed for delivery ${delivery_id}:`,
+        err.message
+      );
     }
   }
 
