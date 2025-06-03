@@ -6,8 +6,10 @@ import deliveryRoute from "./routes/deliveryRoute.js";
 import reportRoute from "./routes/reportRoute.js";
 import authRoute from "./routes/authRoute.js";
 import clientDeliveryRoute from "./routes/clientDeliveryRoute.js";
+import driverDeliveryRoutes from "./routes/driverDeliveryRoutes.js";
 import env from "dotenv";
 import axios from "axios";
+
 
 env.config();
 const app = express();
@@ -25,6 +27,8 @@ app.use("/api", deliveryRoute);
 app.use("/api", reportRoute);
 app.use("/api",  authRoute)
 app.use("/api", clientDeliveryRoute);
+app.use("/api", driverDeliveryRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
@@ -207,3 +211,4 @@ app.get("/api/route-distance", async (req, res) => {
     res.status(500).json({ error: "Failed to calculate route distance." });
   }
 });
+
