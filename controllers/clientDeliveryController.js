@@ -40,3 +40,21 @@ export const getClientDeliveryById = async (req, res) => {
   }
 };
 
+
+export const updateClientDelivery = async (req, res) => {
+  try {
+    const { deliveryId } = req.params;
+    const updateData = req.body;
+
+    const updatedDelivery = await deliveryService.updateClientDelivery(deliveryId, updateData);
+
+    if (!updatedDelivery) {
+      return res.status(404).json({ message: "Delivery not found or update failed." });
+    }
+
+    res.status(200).json(updatedDelivery);
+  } catch (error) {
+    console.error("Error updating delivery:", error);
+    res.status(500).json({ message: "Failed to update delivery", error: error.message });
+  }
+};

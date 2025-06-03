@@ -113,3 +113,74 @@ export const getClientDeliveryById = async (deliveryId, senderId) => {
   return rows[0]; // return a single delivery
 };
 
+export const updateClientDelivery = async (deliveryId, updateData) => {
+  const {
+    driver_id,
+    status,
+    delivery_fee,
+    commission_amount,
+    driver_earnings,
+    commission_deducted,
+    additional_compensation,
+    tip,
+    parcel_amount,
+    receiver_name,
+    receiver_contact,
+    dropoff_address,
+    dropoff_lat,
+    dropoff_long,
+    dropoff_city,
+    distance_km,
+    duration_minutes,
+    add_info,
+    accepted_at,
+    received_at,
+  } = updateData;
+
+  const fields = [];
+  const values = [];
+  let paramIndex = 1;
+
+  const addField = (key, value) => {
+    fields.push(`${key} = $${paramIndex++}`);
+    values.push(value);
+  };
+
+  if (driver_id !== undefined) addField("driver_id", driver_id);
+  if (status !== undefined) addField("status", status);
+  if (delivery_fee !== undefined) addField("delivery_fee", delivery_fee);
+  if (commission_amount !== undefined) addField("commission_amount", commission_amount);
+  if (driver_earnings !== undefined) addField("driver_earnings", driver_earnings);
+  if (commission_deducted !== undefined) addField("commission_deducted", commission_deducted);
+  if (additional_compensation !== undefined) addField("additional_compensation", additional_compensation);
+  if (tip !== undefined) addField("tip", tip);
+  if (parcel_amount !== undefined) addField("parcel_amount", parcel_amount);
+  if (receiver_name !== undefined) addField("receiver_name", receiver_name);
+  if (receiver_contact !== undefined) addField("receiver_contact", receiver_contact);
+  if (dropoff_address !== undefined) addField("dropoff_address", dropoff_address);
+  if (dropoff_lat !== undefined) addField("dropoff_lat", dropoff_lat);
+  if (dropoff_long !== undefined) addField("dropoff_long", dropoff_long);
+  if (dropoff_city !== undefined) addField("dropoff_city", dropoff_city);
+  if (distance_km !== undefined) addField("distance_km", distance_km);
+  if (duration_minutes !== undefined) addField("duration_minutes", duration_minutes);
+  if (add_info !== undefined) addField("add_info", add_info);
+  if (accepted_at !== undefined) addField("accepted_at", accepted_at);
+  if (received_at !== undefined) addField("received_at", received_at);
+
+  if (fields.length === 0) {
+    throw new Error("No valid fields provided for update.");
+  }
+
+  const queryText = `
+    UPDATE deliveries
+    SET ${fields.join(", ")}
+    WHERE delivery_id = $${paramIndex}
+    RETURNING *;
+  `;
+
+  values.push(deliveryId);
+
+  const { rows } = await query(queryText, values);
+  return rows[0];
+};
+
