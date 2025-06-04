@@ -127,7 +127,7 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
         u.phone AS sender_phone,
         u.email AS sender_email
       FROM deliveries d
-      JOIN users u ON d.sender_id = u.user_id
+      JOIN users u ON d.sender_id = u.user_id AND d.status IN ('accepted', 'in_transit')
       WHERE d.driver_id = $1 AND d.delivery_id = $2
       LIMIT 1;
     `;
