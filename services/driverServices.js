@@ -1,4 +1,7 @@
+import bcrypt from 'bcrypt';
 import { query } from "../db.js";
+
+const SALT_ROUNDS = 10;
 
 export const getDrivers = async () => {
   const { rows } = await query(`
@@ -24,7 +27,6 @@ export const getDrivers = async () => {
   return rows;
 };
 
-
 export const createDriver = async (driverData) => {
   const {
     full_name,
@@ -37,9 +39,12 @@ export const createDriver = async (driverData) => {
     is_available = false,
   } = driverData;
 
+  // 🔒 Hash the password before inserting
+  const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
+
   const userResult = await query(
     "INSERT INTO users (full_name, email, password_hash, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [full_name, email, password_hash, phone, role]
+    [full_name, email, hashedPassword, phone, role]
   );
 
   const user = userResult.rows[0];
@@ -54,7 +59,6 @@ export const createDriver = async (driverData) => {
     ...driverResult.rows[0]
   };
 };
-
 
 export const updateDriver = async (driverData, driverId) => {
   const {
@@ -71,13 +75,15 @@ export const updateDriver = async (driverData, driverId) => {
   let userQuery, userValues;
 
   if (password_hash) {
+    const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS); // 🔒
+
     userQuery = `
       UPDATE users
       SET full_name = $1, email = $2, password_hash = $3, phone = $4, role = $5
       WHERE user_id = $6
       RETURNING *;
     `;
-    userValues = [full_name, email, password_hash, phone, role, driverId];
+    userValues = [full_name, email, hashedPassword, phone, role, driverId];
   } else {
     userQuery = `
       UPDATE users

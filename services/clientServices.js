@@ -1,4 +1,7 @@
+import bcrypt from 'bcrypt';
 import { query } from "../db.js";
+
+const SALT_ROUNDS = 10;
 
 export const getClients = async () => {
   const { rows } = await query("SELECT * FROM users WHERE role = 'customer'");
@@ -7,9 +10,13 @@ export const getClients = async () => {
 
 export const createClient = async (clientData) => {
   const { full_name, email, password_hash, phone, role = 'customer' } = clientData;
+
+  // 🔒 Hash the password
+  const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
+
   const { rows } = await query(
     "INSERT INTO users (full_name, email, password_hash, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [full_name, email, password_hash, phone, role]
+    [full_name, email, hashedPassword, phone, role]
   );
   return rows[0];
 };
@@ -21,13 +28,16 @@ export const updateClient = async (clientData, clientId) => {
   let values;
 
   if (password_hash) {
+    // 🔒 Hash the new password
+    const hashedPassword = await bcrypt.hash(password_hash, SALT_ROUNDS);
+
     queryText = `
       UPDATE users
       SET full_name = $1, email = $2, password_hash = $3, phone = $4, role = $5
       WHERE user_id = $6
       RETURNING *;
     `;
-    values = [full_name, email, password_hash, phone, role, clientId];
+    values = [full_name, email, hashedPassword, phone, role, clientId];
   } else {
     queryText = `
       UPDATE users
