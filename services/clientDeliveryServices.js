@@ -194,7 +194,7 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   const current = existing.rows[0];
 
   // 2. Prevent if already accepted by another driver
-  if (current.status === "accepted") {
+  if (current.status === "accepted" && is_arrived === undefined) {
     if (current.driver_id && current.driver_id !== driver_id) {
       throw new Error("Delivery already accepted by another driver.");
     }
