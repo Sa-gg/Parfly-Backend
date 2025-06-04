@@ -134,23 +134,23 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
     queryParams = [driverId, deliveryId];
   } else {
     queryText = `
-      SELECT 
-        d.*, 
-        u.full_name AS sender_name,
-        u.phone AS sender_phone,
-        u.email AS sender_email
-      FROM deliveries d
-      JOIN users u ON d.sender_id = u.user_id
-      WHERE d.driver_id = $1 AND d.status = 'accepted'
-      ORDER BY d.accepted_at DESC;
-    `;
+  SELECT 
+    d.*, 
+    u.full_name AS sender_name,
+    u.phone AS sender_phone,
+    u.email AS sender_email
+  FROM deliveries d
+  JOIN users u ON d.sender_id = u.user_id
+  WHERE d.driver_id = $1 AND d.status IN ('accepted', 'in_transit')
+  ORDER BY d.accepted_at DESC;
+`;
+
     queryParams = [driverId];
   }
 
   const { rows } = await query(queryText, queryParams);
   return deliveryId ? rows[0] : rows;
 };
-
 
 export const updateClientDelivery = async (deliveryId, updateData) => {
   const {
