@@ -176,6 +176,9 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
     add_info,
     accepted_at,
     received_at,
+    arrival_time, // NEW
+    is_arrived, // NEW
+    last_eta_update, // NEW
   } = updateData;
 
   // 1. Fetch current delivery info
@@ -205,7 +208,7 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   if (status === "accepted" && driver_id) {
     const activeCheck = await query(
       `SELECT delivery_id FROM deliveries
-     WHERE driver_id = $1 AND status IN ('accepted', 'in_transit') AND delivery_id != $2`,
+       WHERE driver_id = $1 AND status IN ('accepted', 'in_transit') AND delivery_id != $2`,
       [driver_id, deliveryId]
     );
 
@@ -221,12 +224,10 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
 
   if (driver_id !== undefined) {
     const driverResult = await query(
-      `
-      SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
-      FROM drivers d
-      JOIN users u ON d.user_id = u.user_id
-      WHERE d.driver_id = $1
-    `,
+      `SELECT u.full_name AS driver_name, d.vehicle_type, d.vehicle_plate
+       FROM drivers d
+       JOIN users u ON d.user_id = u.user_id
+       WHERE d.driver_id = $1`,
       [driver_id]
     );
 
@@ -275,6 +276,10 @@ export const updateClientDelivery = async (deliveryId, updateData) => {
   if (add_info !== undefined) addField("add_info", add_info);
   if (accepted_at !== undefined) addField("accepted_at", accepted_at);
   if (received_at !== undefined) addField("received_at", received_at);
+  if (arrival_time !== undefined) addField("arrival_time", arrival_time); // NEW
+  if (is_arrived !== undefined) addField("is_arrived", is_arrived); // NEW
+  if (last_eta_update !== undefined)
+    addField("last_eta_update", last_eta_update); // NEW
 
   if (fields.length === 0) {
     throw new Error("No valid fields provided for update.");
