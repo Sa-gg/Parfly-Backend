@@ -54,7 +54,8 @@ app.get("/", (req, res) => {
 // Location search
 app.get("/api/search-location", async (req, res) => {
   const { q, lat, lon } = req.query;
-  if (!q) return res.status(400).json({ error: "Query parameter q is required" });
+  if (!q)
+    return res.status(400).json({ error: "Query parameter q is required" });
 
   try {
     const params = {
@@ -77,7 +78,9 @@ app.get("/api/search-location", async (req, res) => {
     const filteredResults = data.results.filter((result) => {
       const addr = result.address || {};
       const province = (addr.countrySecondarySubdivision || "").toLowerCase();
-      const municipalitySubdivision = (addr.municipalitySubdivision || "").toLowerCase();
+      const municipalitySubdivision = (
+        addr.municipalitySubdivision || ""
+      ).toLowerCase();
       const municipality = (addr.municipality || "").toLowerCase();
       const freeform = (addr.freeformAddress || "").toLowerCase();
 
@@ -101,18 +104,22 @@ app.get("/api/search-location", async (req, res) => {
 // Reverse geocoding
 app.get("/api/reverse-geocode", async (req, res) => {
   const { lat, lon } = req.query;
-  if (!lat || !lon) return res.status(400).json({ error: "Missing lat or lon" });
+  if (!lat || !lon)
+    return res.status(400).json({ error: "Missing lat or lon" });
 
   try {
-    const poiRes = await axios.get(`https://api.tomtom.com/search/2/nearbySearch/.JSON`, {
-      params: {
-        key: process.env.TOMTOM_API_KEY,
-        lat,
-        lon,
-        radius: 50,
-        limit: 1,
-      },
-    });
+    const poiRes = await axios.get(
+      `https://api.tomtom.com/search/2/nearbySearch/.JSON`,
+      {
+        params: {
+          key: process.env.TOMTOM_API_KEY,
+          lat,
+          lon,
+          radius: 50,
+          limit: 1,
+        },
+      }
+    );
 
     let poiName = null;
     let address = null;
@@ -171,7 +178,8 @@ app.get("/api/route-distance", async (req, res) => {
     const route = data.routes?.[0];
     if (!route) return res.status(404).json({ error: "No route found." });
 
-    const { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds } = route.summary;
+    const { lengthInMeters, travelTimeInSeconds, trafficDelayInSeconds } =
+      route.summary;
 
     res.json({
       distanceInMeters: lengthInMeters,
@@ -187,7 +195,6 @@ app.get("/api/route-distance", async (req, res) => {
   }
 });
 
-
 io.on("connection", (socket) => {
   console.log(`🟢 Socket connected: ${socket.id}`);
 
@@ -198,7 +205,7 @@ io.on("connection", (socket) => {
     try {
       // Update the delivery record in the database
       await query(
-        `UPDATE deliveries SET arrival_time = $1, is_arrived = false WHERE id = $2`,
+        `UPDATE deliveries SET arrival_time = $1, last_eta_update = NOW(), is_arrived = false WHERE id = $2`,
         [arrivalTime, delivery_id]
       );
 
@@ -210,7 +217,10 @@ io.on("connection", (socket) => {
 
       console.log(`✅ Arrival time set for delivery ${delivery_id}`);
     } catch (err) {
-      console.error(`❌ Failed to update delivery ${delivery_id}:`, err.message);
+      console.error(
+        `❌ Failed to update delivery ${delivery_id}:`,
+        err.message
+      );
     }
   });
 
