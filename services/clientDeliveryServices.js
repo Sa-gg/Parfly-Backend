@@ -129,7 +129,8 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
       FROM deliveries d
       JOIN users u ON d.sender_id = u.user_id AND d.status IN ('accepted', 'in_transit')
       WHERE d.driver_id = $1 AND d.delivery_id = $2
-      LIMIT 1;
+      Limit 1
+      
     `;
     queryParams = [driverId, deliveryId];
   } else {
@@ -143,13 +144,14 @@ export const getDriverDeliveryById = async (driverId, deliveryId = null) => {
   JOIN users u ON d.sender_id = u.user_id
   WHERE d.driver_id = $1 AND d.status IN ('accepted', 'in_transit')
   ORDER BY d.accepted_at DESC;
+  
 `;
 
     queryParams = [driverId];
   }
 
   const { rows } = await query(queryText, queryParams);
-  return deliveryId ? rows[0] : rows;
+  return Array.isArray(rows) ? rows : [];
 };
 
 export const updateClientDelivery = async (deliveryId, updateData) => {

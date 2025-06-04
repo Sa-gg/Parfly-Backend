@@ -42,8 +42,10 @@ export const getDeliveriesByDistance = async (lat, lon) => {
       if (meters === undefined || meters === null || meters === 0) {
         console.warn(`Delivery ${delivery_id} - No route or zero distance`);
         distanceKm = 0.01;
-      } else {
+      } else if (meters > 0) {
         distanceKm = +(meters / 1000).toFixed(2);
+      } else {
+        distanceKm = 0.01;
       }
       const enriched = { ...delivery, distanceKm };
 
