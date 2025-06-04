@@ -11,3 +11,17 @@ export const getDeliveriesByDistance = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+export const getDeliveryDistanceForOne = async (req, res) => {
+  const { lat, lon } = req.query;
+  const { deliveryId } = req.params;
+
+  try {
+    const result = await deliveryService.getDeliveryDistanceById(lat, lon, deliveryId);
+    res.json(result);
+  } catch (error) {
+    console.error(`Error getting delivery distance for ID ${deliveryId}:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+};

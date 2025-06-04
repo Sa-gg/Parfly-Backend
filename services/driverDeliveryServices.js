@@ -70,3 +70,56 @@ export const getDeliveriesByDistance = async (lat, lon) => {
     intercity,
   };
 };
+
+
+export const getDeliveryDistanceById = async (lat, lon, deliveryId) => {
+  if (!lat || !lon || !deliveryId) {
+    throw new Error("Latitude, longitude, and delivery ID are required.");
+  }
+
+  const result = await query(
+    `SELECT * FROM deliveries WHERE delivery_id = $1`,
+    [deliveryId]
+  );
+
+  const delivery = result.rows[0];
+  if (!delivery) throw new Error("Delivery not found.");
+
+  const { pickup_lat, pickup_long } = delivery;
+  if (!pickup_lat || !pickup_long) throw new Error("Invalid pickup coordinates.");
+
+  const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${lat},${lon}:${pickup_lat},${pickup_long}/json`;
+
+  try {
+    const { data } = await axios.get(routeUrl, {
+      params: {
+        key: tomtomKey,
+        travelMode: "motorcycle",
+        routeType: "fastest",
+      },
+    });
+
+    const meters = data.routes?.[0]?.summary?.lengthInMeters || 0;
+    const durationSec = data.routes?.[0]?.summary?.travelTimeInSeconds || 0;
+    let distanceKm;
+
+    if (meters === undefined || meters === null || meters === 0) {
+        console.warn(`Delivery ${deliveryId} - No route or zero distance`);
+        distanceKm = 0.01;
+      } else if (meters > 0) {
+        distanceKm = +(meters / 1000).toFixed(2);
+      } else {
+        distanceKm = 0.01;
+      }
+
+    return {
+      delivery_id: deliveryId,
+      distance_km: distanceKm,
+      eta_seconds: durationSec,
+    };
+  } catch (err) {
+    console.warn(`TomTom route failed for delivery ${deliveryId}:`, err.message);
+    throw new Error("Failed to fetch route data.");
+  }
+};
+

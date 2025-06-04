@@ -4,5 +4,7 @@ import * as driverDeliveryController from "../controllers/driverDeliveryControll
 const router = express.Router();
 
 router.get("/driver/deliveries-by-distance", driverDeliveryController.getDeliveriesByDistance);
+router.get("/driver/delivery/:deliveryId/distance", driverDeliveryController.getDeliveryDistanceForOne);
+
 
 export default router;
