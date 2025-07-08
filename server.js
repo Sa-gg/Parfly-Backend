@@ -23,7 +23,8 @@ const io = new Server(server, {
   },
 });
 
-const PORT = process.env.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const tomtomKey = process.env.TOMTOM_API_KEY;
 
 app.use(cors());
